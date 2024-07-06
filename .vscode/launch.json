@@ -5,6 +5,12 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "command": "cargo run --features bevy/dynamic_linking",
+            "name": "Bevy run",
+            "request": "launch",
+            "type": "node-terminal"
+        },
+        {
             "name": "Launch",
             "type": "lldb",
             "request": "launch",

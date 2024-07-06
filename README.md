@@ -1,1 +1,3 @@
-see [bevy-setup](https://bevyengine-cn.github.io/learn/book_cn/getting-started/setup/)
+# Bevy
+
+see [bevy-setup](https://bevyengine.org/learn/quick-start/getting-started/setup/)
