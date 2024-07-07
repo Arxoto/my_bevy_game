@@ -1,5 +1,7 @@
 #![allow(dead_code)]
 
+mod examples;
+
 use bevy::prelude::*;
 
 // =========
@@ -95,5 +97,7 @@ fn greet_people_with_time_res(
 
 fn main() {
     // course_1();
-    course_2();
+    // course_2();
+
+    examples::run_example();
 }
