@@ -26,9 +26,9 @@ fn setup(
     let shapes = [
         // 圆
         Mesh2dHandle(meshes.add(Circle { radius: 50.0 })),
-        // 圆扇形 angle 角度即弧度与半径的倍数 如 Pi 等同于整圆
+        // 扇形 angle 角度即弧度与半径的倍数 如 Pi 等同于整圆
         Mesh2dHandle(meshes.add(CircularSector::new(50.0, 1.0))),
-        // 圆片段 同上
+        // 弧形 自上而下部分渲染 底部是水平的 参数同上
         Mesh2dHandle(meshes.add(CircularSegment::new(50.0, 1.25))),
         // 椭圆 即圆的拉伸
         Mesh2dHandle(meshes.add(Ellipse::new(25.0, 50.0))),
