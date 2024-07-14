@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 
 mod examples;
+mod example_games;
 
 use bevy::prelude::*;
 
@@ -99,5 +100,9 @@ fn main() {
     // course_1();
     // course_2();
 
-    examples::run_example();
+    // examples::main();
+
+    example_games::main();
+
+    // my_games::main();
 }

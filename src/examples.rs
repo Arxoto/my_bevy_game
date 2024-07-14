@@ -13,7 +13,7 @@ mod sprite_sheet;
 mod sprite_slice;
 mod sprite_tile;
 
-pub fn run_example() {
+pub fn main() {
     // 绘制各种形状
     // a_2d_shapes::main();
 
