@@ -2,6 +2,7 @@
 
 mod examples;
 mod example_games;
+mod my_games;
 
 use bevy::prelude::*;
 
