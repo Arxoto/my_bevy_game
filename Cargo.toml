@@ -17,22 +17,21 @@ opt-level = 1
 [profile.dev.package."*"]
 opt-level = 3
 
-# Enable additional optimizations in release mode at the cost of compile time.
+# Enable more optimization in the release profile at the cost of compile time.
 [profile.release]
-# Enable more optimizations by compiling the entire crate as one unit.
-# Significantly slows compile times, marginal improvements.
+# Compile the entire crate as one unit.
+# Slows compile times, marginal improvements.
 codegen-units = 1
 # Do a second optimization pass over the entire program, including dependencies.
-# Slightly slows compile times, marginal improvements.
+# Slows compile times, marginal improvements.
 lto = "thin"
 
-# When releasing for web, you can pass --profile wasm-release to cargo instead of --release.
-# Optimize for size in wasm-release mode to reduce load times and bandwidth usage on web.
+# Optimize for size in the wasm-release profile to reduce load times and bandwidth usage on web.
 [profile.wasm-release]
-# Use release profile as default values.
+# Default to release profile values.
 inherits = "release"
-# Optimize with size in mind (also try "s", sometimes it is better).
-# This doesn't increase compilation times compared to -O3, great improvements.
-opt-level = "z"
-# Strip all debugging information from the binary to reduce file size.
+# Optimize with size in mind (also try "z", sometimes it is better).
+# Slightly slows compile times, great improvements to file size and runtime performance.
+opt-level = "s"
+# Strip all debugging information from the binary to slightly reduce file size.
 strip = "debuginfo"

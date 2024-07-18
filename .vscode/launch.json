@@ -6,19 +6,21 @@
     "configurations": [
         {
             "command": "cargo run --features bevy/dynamic_linking",
-            "name": "Bevy run",
+            "name": "Run",
             "request": "launch",
             "type": "node-terminal"
         },
         {
-            "name": "Launch",
             "type": "lldb",
             "request": "launch",
-            "program": "${workspaceFolder}/target/debug/${workspaceFolderBasename}.exe",
+            "name": "Debug",
+            "cargo": {
+                "args": [
+                    "build"
+                ]
+            },
             "args": [],
-            "cwd": "${workspaceFolder}",
-            "console": "integratedTerminal",
-            "preLaunchTask": "bevy_run"
+            "cwd": "${workspaceFolder}"
         }
     ]
 }
