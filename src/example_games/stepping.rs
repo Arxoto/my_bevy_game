@@ -1,5 +1,7 @@
 use bevy::{app::MainScheduleOrder, ecs::schedule::*, prelude::*};
 
+/// 步进系统的独立调度标记
+/// 
 /// Independent [`Schedule`] for stepping systems.
 ///
 /// The stepping systems must run in their own schedule to be able to inspect
@@ -9,6 +11,8 @@ use bevy::{app::MainScheduleOrder, ecs::schedule::*, prelude::*};
 #[derive(Debug, Hash, PartialEq, Eq, Clone, ScheduleLabel)]
 struct DebugSchedule;
 
+/// 逐帧调试
+/// 
 /// Plugin to add a stepping UI to an example
 #[derive(Default)]
 pub struct SteppingPlugin {
@@ -37,6 +41,7 @@ impl Plugin for SteppingPlugin {
             return;
         }
 
+        // 在 Update 后面插入一个自定义的调度标记 Debug 专门用于逐帧调试
         // create and insert our debug schedule into the main schedule order.
         // We need an independent schedule so we have access to all other
         // schedules through the `Stepping` resource
@@ -44,6 +49,7 @@ impl Plugin for SteppingPlugin {
         let mut order = app.world_mut().resource_mut::<MainScheduleOrder>();
         order.insert_after(Update, DebugSchedule);
 
+        // 记录要关注的调度标记符
         // create our stepping resource
         let mut stepping = Stepping::new();
         for label in &self.schedule_labels {
@@ -51,6 +57,7 @@ impl Plugin for SteppingPlugin {
         }
         app.insert_resource(stepping);
 
+        // 在 Debug 调度时刻 根据键盘输入来对游戏进行时停
         // add our startup & stepping systems
         app.insert_resource(State {
             ui_top: self.top,
@@ -80,6 +87,7 @@ struct State {
     ui_left: Val,
 }
 
+/// 判断是否已初始化
 /// condition to check if the stepping UI has been constructed
 fn initialized(state: Res<State>) -> bool {
     !state.systems.is_empty()
@@ -91,6 +99,8 @@ const FONT_BOLD: &str = "fonts/FiraSans-Bold.ttf";
 #[derive(Component)]
 struct SteppingUi;
 
+/// 绘制调试提示的 ui
+/// 
 /// Construct the stepping UI elements from the [`Schedules`] resource.
 ///
 /// This system may run multiple times before constructing the UI as all of the
@@ -110,6 +120,7 @@ fn build_ui(
         return;
     };
 
+    // 显示每个调度阶段
     // go through the stepping schedules and construct a list of systems for
     // each label
     for label in schedule_order {
@@ -182,6 +193,7 @@ fn build_ui(
     ));
 }
 
+/// 显示逐帧调试的提示字样
 fn build_stepping_hint(mut commands: Commands) {
     let hint_text = if cfg!(feature = "bevy_debug_stepping") {
         "Press ` to toggle stepping mode (S: step system, Space: step frame)"
@@ -206,6 +218,7 @@ fn build_stepping_hint(mut commands: Commands) {
     }),));
 }
 
+/// 根据键盘输入控制时停
 fn handle_input(keyboard_input: Res<ButtonInput<KeyCode>>, mut stepping: ResMut<Stepping>) {
     if keyboard_input.just_pressed(KeyCode::Slash) {
         info!("{:#?}", stepping);

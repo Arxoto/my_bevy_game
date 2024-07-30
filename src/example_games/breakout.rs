@@ -54,16 +54,21 @@ const SCORE_COLOR: Color = Color::srgb(1.0, 0.5, 0.5);
 pub fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
+        // 自定义的逐帧调试插件
         .add_plugins(
             stepping::SteppingPlugin::default()
                 .add_schedule(Update)
                 .add_schedule(FixedUpdate)
                 .at(Val::Percent(35.0), Val::Percent(50.0)),
         )
+        // 游戏得分
         .insert_resource(Score(0))
         .insert_resource(ClearColor(BACKGROUND_COLOR))
+        // 自定义碰撞事件
         .add_event::<CollisionEvent>()
+        // 初始化逻辑
         .add_systems(Startup, setup)
+        // 把碰撞计算添加到固定步长的调度中去
         // Add our gameplay simulation systems to the fixed timestep schedule
         // which runs at 64 Hz by default
         .add_systems(
@@ -81,21 +86,27 @@ pub fn main() {
         .run();
 }
 
+/// 踏板
 #[derive(Component)]
 struct Paddle;
 
+/// 球
 #[derive(Component)]
 struct Ball;
 
+/// 速度向量
 #[derive(Component, Deref, DerefMut)]
 struct Velocity(Vec2);
 
+/// 碰撞体
 #[derive(Component)]
 struct Collider;
 
+/// 碰撞事件
 #[derive(Event, Default)]
 struct CollisionEvent;
 
+/// 砖块
 #[derive(Component)]
 struct Brick;
 
@@ -103,6 +114,7 @@ struct Brick;
 struct CollisionSound(Handle<AudioSource>);
 
 // This bundle is a collection of the components that define a "wall" in our game
+/// 墙的捆绑包
 #[derive(Bundle)]
 struct WallBundle {
     // You can nest bundles inside of other bundles like this
@@ -190,6 +202,7 @@ fn setup(
     mut materials: ResMut<Assets<ColorMaterial>>,
     asset_server: Res<AssetServer>,
 ) {
+    // 视角相机
     // Camera
     commands.spawn(Camera2dBundle::default());
 
@@ -197,16 +210,20 @@ fn setup(
     let ball_collision_sound = asset_server.load("sounds/breakout_collision.ogg");
     commands.insert_resource(CollisionSound(ball_collision_sound));
 
+    // 固定的踏板的 y 坐标
     // Paddle
     let paddle_y = BOTTOM_WALL + GAP_BETWEEN_PADDLE_AND_FLOOR;
 
+    // 添加踏板 具有碰撞体 和位置渲染组件
     commands.spawn((
         SpriteBundle {
+            // 变换 定义了 位置 旋转 缩放
             transform: Transform {
                 translation: Vec3::new(0.0, paddle_y, 0.0),
                 scale: PADDLE_SIZE.extend(1.0),
                 ..default()
             },
+            // 精灵 游戏开发属于 常指代能感知时间流逝的物体 这里主要用作渲染
             sprite: Sprite {
                 color: PADDLE_COLOR,
                 ..default()
@@ -217,6 +234,7 @@ fn setup(
         Collider,
     ));
 
+    // 添加球 具有初速度  注意 整个游戏只有小球会与其他碰撞物体相撞 为简化计算 小球不设置碰撞
     // Ball
     commands.spawn((
         MaterialMesh2dBundle {
@@ -230,6 +248,7 @@ fn setup(
         Velocity(INITIAL_BALL_DIRECTION.normalize() * BALL_SPEED),
     ));
 
+    // 得分板
     // Scoreboard
     commands.spawn((
         ScoreboardUi,
@@ -256,12 +275,14 @@ fn setup(
         }),
     ));
 
+    // 四面墙
     // Walls
     commands.spawn(WallBundle::new(WallLocation::Left));
     commands.spawn(WallBundle::new(WallLocation::Right));
     commands.spawn(WallBundle::new(WallLocation::Bottom));
     commands.spawn(WallBundle::new(WallLocation::Top));
 
+    // 加入砖块
     // Bricks
     let total_width_of_bricks = (RIGHT_WALL - LEFT_WALL) - 2. * GAP_BETWEEN_BRICKS_AND_SIDES;
     let bottom_edge_of_bricks = paddle_y + GAP_BETWEEN_PADDLE_AND_BRICKS;
@@ -317,6 +338,7 @@ fn setup(
     }
 }
 
+/// 根据键盘输入控制踏板移动
 fn move_paddle(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut query: Query<&mut Transform, With<Paddle>>,
@@ -333,10 +355,12 @@ fn move_paddle(
         direction += 1.0;
     }
 
+    // 计算新坐标 速度乘以时间差
     // Calculate the new horizontal paddle position based on player input
     let new_paddle_position =
         paddle_transform.translation.x + direction * PADDLE_SPEED * time.delta_seconds();
 
+    // 在墙范围约束内刷新坐标
     // Update the paddle position,
     // making sure it doesn't cause the paddle to leave the arena
     let left_bound = LEFT_WALL + WALL_THICKNESS / 2.0 + PADDLE_SIZE.x / 2.0 + PADDLE_PADDING;
@@ -345,6 +369,7 @@ fn move_paddle(
     paddle_transform.translation.x = new_paddle_position.clamp(left_bound, right_bound);
 }
 
+/// 对所有具有速度组件的物体 根据时间差刷新下一时刻的位置
 fn apply_velocity(mut query: Query<(&mut Transform, &Velocity)>, time: Res<Time>) {
     for (mut transform, velocity) in &mut query {
         transform.translation.x += velocity.x * time.delta_seconds();
@@ -357,6 +382,8 @@ fn update_scoreboard(score: Res<Score>, mut query: Query<&mut Text, With<Scorebo
     text.sections[1].value = score.to_string();
 }
 
+/// 碰撞逻辑  
+/// 球不具备碰撞属性 所以需要单独拿出来
 fn check_for_collisions(
     mut commands: Commands,
     mut score: ResMut<Score>,
@@ -368,27 +395,34 @@ fn check_for_collisions(
 
     for (collider_entity, collider_transform, maybe_brick) in &collider_query {
         let collision = ball_collision(
+            // 小球 正圆
             BoundingCircle::new(ball_transform.translation.truncate(), BALL_DIAMETER / 2.),
+            // 碰撞体 均为矩形
             Aabb2d::new(
                 collider_transform.translation.truncate(),
                 collider_transform.scale.truncate() / 2.,
             ),
         );
 
+        // 小球与每个碰撞体之间每次至多产生一个碰撞
         if let Some(collision) = collision {
+            // 发送一个碰撞事件
             // Sends a collision event so that other systems can react to the collision
             collision_events.send_default();
 
+            // 如果是砖块碰撞了 就需要删除并且加分
             // Bricks should be despawned and increment the scoreboard on collision
             if maybe_brick.is_some() {
                 commands.entity(collider_entity).despawn();
                 **score += 1;
             }
 
+            // 碰撞反射
             // Reflect the ball's velocity when it collides
             let mut reflect_x = false;
             let mut reflect_y = false;
 
+            // 只有当速度与碰撞方向相反时才反射 这可以防止球卡在杆内
             // Reflect only if the velocity is in the opposite direction of the collision
             // This prevents the ball from getting stuck inside the bar
             match collision {
@@ -411,6 +445,7 @@ fn check_for_collisions(
     }
 }
 
+/// 播放碰撞音效 
 fn play_collision_sound(
     mut commands: Commands,
     mut collision_events: EventReader<CollisionEvent>,
@@ -438,13 +473,18 @@ enum Collision {
 
 // Returns `Some` if `ball` collides with `bounding_box`.
 // The returned `Collision` is the side of `bounding_box` that `ball` hit.
+/// 返回碰撞方向 根据碰撞方向来扭转速度方向 完全弹性碰撞
 fn ball_collision(ball: BoundingCircle, bounding_box: Aabb2d) -> Option<Collision> {
+    // 自带的相交检测
     if !ball.intersects(&bounding_box) {
         return None;
     }
 
+    // 找到与圆心距离最近的点 最远不会超过矩形范围
     let closest = bounding_box.closest_point(ball.center());
+    // 计算相对位置
     let offset = ball.center() - closest;
+    // 计算碰撞方向 位移大先装上的优先
     let side = if offset.x.abs() > offset.y.abs() {
         if offset.x < 0. {
             Collision::Left
