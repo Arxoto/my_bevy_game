@@ -103,7 +103,9 @@ fn main() {
 
     // examples::main();
 
-    example_games::main();
+    // example_games::main();
 
     // my_games::main();
+
+    print!("{}\n", interpreter::add(2, 3));
 }

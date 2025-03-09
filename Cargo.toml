@@ -5,9 +5,11 @@ edition = "2021"
 
 [dependencies]
 bevy = "0.14.0"
+interpreter = { path = "./interpreter" }
 
 [workspace]
 resolver = "2" # Important! wgpu/Bevy needs this!
+members = ["interpreter"]
 
 # Enable a small amount of optimization in debug mode.
 [profile.dev]
